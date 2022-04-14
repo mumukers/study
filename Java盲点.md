@@ -734,4 +734,87 @@ main方法依旧遵守static的使用规则
 ​				枚举类 . values（）方法：返回一个枚举对象数组。
 ​				枚举对象 a . compareTo（参数：枚举对象 b）方法：**比较两个枚举对象编号,返回两个编号之间的差值** 
 ​					=》a.ordinal() - b.ordinal()。
+
+## 注解：
+
+### 			@Overrid ：
+
+​							方法重写，不是方法重写会报编译错误
+
+### 			@Deprecated
+
+​							表名该 **构造器，属性，局部变量，参数，类型，方法**是过时的	
+
+### 			@SuppressWarnings（{  " 警告类型" }）
+
+​							压制警告
+
+#### 							警告类型有：
+
+​												// all，抑制所有警告 // boxing，抑制与封装/拆装作业相关的警告 // //cast，抑制与强制转型												作业相关的警告 // //dep-ann，抑制与淘汰注释相关的警告 // //deprecation，抑制与淘汰的												相关警告 // //fallthrough，抑制与 switch 陈述式中遗漏 break 相关的警告 // //finally，抑制与												未传回 finally 区块相关的警告 // //hiding，抑制与隐藏变数的区域变数相关的警告 // 												//incomplete-switch，抑制与 switch 陈述式(enum case)中遗漏项目相关的警告 // 												//javadoc，抑制与 javadoc 相关的警告 韩顺平循序渐进学 Java 零基础 第 497页 // //nls，												抑制与非 nls 字串文字相关的警告 // //null，抑制与空值分析相关的警告 // //rawtypes，抑制												与使用 raw 类型相关的警告 // //resource，抑制与使用 Closeable 类型的资源相关的警告 // 												//restriction，抑制与使用不建议或禁止参照相关的警告 // //serial，抑制与可序列化的类别遗												漏 serialVersionUID 栏位相关的警告 // //static-access，抑制与静态存取不正确相关的警告 												// //static-method，抑制与可能宣告为 static 的方法相关的警告 // //super，抑制与置换方法												相关但不含 super 呼叫的警告 // //synthetic-access，抑制与内部类别的存取未最佳化相关												的警告 // //sync-override，抑制因为置换同步方法而遗漏同步化的警告 // //unchecked，抑												制与未检查的作业相关的警告 // //unqualified-field-access，抑制与栏位存取不合格相关的												警告 // //unused，抑制与未用的程式码及停用的程式码相关的警告	
+
+#### 							抑制位置：
+
+​												在main方法上或者类上		
+
+​						
+
+```
+@Target({TYPE, FIELD, METHOD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE})
+@Retention(RetentionPolicy.SOURCE)
+public @interface SuppressWarnings {
+    String[] value();
+    //value()用来传递参数给注解，如{"rawtypes","unchecked"}
+}
+```
+
+### 				四种元注解：
+
+#### 						@Retention  (RetentionPolicy=SOURCE/CLASS/RUNTIME)
+
+​										**将注解保留到哪个阶段**（RetentionPolicy . 选项）
+
+​						选项：SOURCE（保留注解到源代码/编辑器阶段）
+​									CLASS	(保留注解到class文件阶段)
+​									RUNTIME（保留注解到JVM运行阶段）	
+
+#### 					@Target（value={ CONSTRUCTOR,TYPE.....}）
+
+​										**定义注解作用位置**（方法上，类上，变量上）
+
+#### 					@Documented
+
+​										指定被该元注解修饰的注解会在javadoc生成文档时，也生成文档保留。
+
+#### 					@Inherited
+
+​										被该元注解修饰的注解在子类继承自该类时，同时也会继承该注解
+
+## 异常：
+
+​				程序执行过程中发生的不正常情况（语法错误和逻辑错误不算）
 ​				
+
+### 				分类：
+
+​						ERROR：JVM无法解决的错误。发生ERROR，程序会崩溃
+
+​						Exception：其他的因编程错误或外来因素引起的一般性错误，可以使用针对性的代码进行处理
+
+​										分类：
+​												**运行时异常**：程序运行时发生的异常，编辑器不强制要求处理的异常，一般是指编程时的逻																		辑错误
+​												**编译时异常**：编程时，编辑器检测出的异常，要求必须处理
+
+​						快捷键：ctrl + alt + t   对选中的代码进行包裹（要关闭QQ！）
+
+### 			处理的两种方式：
+
+​				1. try {可能产生异常的代码} 
+​					catch {系统将异常信息封装为异常对象，传递给catch} 
+​					finally{通常为关闭资源语句}：
+
+​					在程序中捕获，程序员自行处理
+
+​				2.throws 异常类（JVM调用main方法，main方法中调用其他方法）：
+​					将异常抛出，由调用者处理。最高级处理者为JVM（直接输出异常信息，然后中断程序）
+​					注意：没有try  catch环绕也没有throws抛出，main默认throws  Exception
