@@ -152,6 +152,12 @@ main方法依旧遵守static的使用规则
 
 ​				intern（）：返回常量池中与调用者内容相同的对象。如果没有，就先创建，再返回
 
+​				format(String，……，……)：通过占位符对字符串进行格式规定
+​					占位符：%s（字符串） , %d（整数） , %0.nf (保留 n 位小数) ， %c（字符）
+
+​					如：String strFormat = “你的名字是%S，分数是%0.2f”;
+​							String  str = String . format(strFormat,"wangkang",23.3333);
+
 ## 分类：
 
 ### 				1.使用字符串创建String对象（String  str="……"）
@@ -184,11 +190,246 @@ main方法依旧遵守static的使用规则
 
 ​					剖析：在查看源码时，发现该方式与  4 方法相同，所以**创建的对象也在堆中**
 
-### 							
+
+
+# StringBuffer类（线程安全）
+
+---
+
+## 方法：
+
+​				append（）：将字符串拼接到当前字符串上
+​										注意：当字符串为null 时，将null转化为 ‘n’, ‘u’, ‘l’, ‘l’,，
+​													但是调用str . length()时会产生空指针异常
+
+​				delete（int  start, int  end）:将index 为 start到 end-1的子串删除
+
+​				insert（int index，String str）：将str 插入到index位置上
 
 ​					
 
-​			
+# StringBuilder（线程不安全，但是效率高）
+
+---
+
+方法：与上面StringBuff几乎一致
+
+# String，Stringbuilder，StringBuffer比较
+
+---
+
+1.
+		String是不可变字符串，效率低，但是代码复用性高
+		StringBuffer是可变字符串，效率高，支持多线程
+		StringBuilder时可变字符串，效率高，线程不安全
+2.
+		存在大量修改操作时就用StringBuilder或StringBuffer
+		多线程用StringBuffer，单线程用StringBuilder
+
+
+
+# 常用工具类
+
+---
+
+## Math（数学工具类）
+
+### 			方法：
+
+​					Random():随机获取 [ 0 ,1）之间任意一个数
+
+​					floor():对数进行向下取整
+
+​					ceil():对数进行向上取整
+
+​					round():对数进行四舍五入
+
+## Arrays（数组工具类）
+
+### 			方法：
+
+​					sort():对数组进行排序
+​						分类：
+​								自然排序：
+
+```Java
+Arrays.sort(arr);
+```
+
+
+​								自定义排序：
+
+```Java
+//匿名内部类+动态绑定
+Arrays.sort(arr, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1-o2;//这里决定排序的顺序是（由小到大，还是由大到小）
+            }
+        });
+```
+
+​					注意：前面 - 后面是由小到大，后面 - 前面是由大到小
+
+​					binarySearch(Object[]  a，Object  target):对**有序数组**进行二分查找
+​							如果target存在，return  index；
+​							**如果target不存在，return  -（low+1）**
+
+​					copyOf（arr ，length）：新建一个类型相同，长度为length的数组，将arr拷贝到新数组中并返回
+​																该方法底层使用System.arraycopy()
+
+​							情况分类：
+​											length<0：报错
+​											length<arr.length：将arr中前length个元素复制到新数组中，并返回
+​											length==arr.length：将arr完整复制到新数组中并返回
+​											length>arr.length：将arr复制到新数组前arr.length个元素中，后面空出，一般用于数组扩容
+
+​					fill（arr，obj）:使用obj去填充arr数组，可以理解为将所有元素替换为obj
+
+​					equals（arr1，arr2）：两数组元素完全一致返回true，否则false
+
+​					asList（）：将一组值转化为List集合
+
+```Java
+List  asList = Arrays.asList(1,2,3,5,6,9);
+//编译类型为List接口
+//运行类型为ArrayList
+```
+
+
+
+## System类（系统类）：
+
+### 			方法：
+
+​					exit（0）：退出程序,0表示状态值
+
+​					arraycopy（src，srcPos，dest，destPos，length）：复制数组
+
+​							参数：
+
+​									src：the  source  array(待拷贝数组)
+
+​									srcPos：starting  position  of  the  source  array(开始拷贝的位置)
+
+​									dest：the  distination  array(拷贝数组的目的地)
+
+​									destPos：starting  position  of  the  destination  array(开始接收拷贝的位置)
+
+​									length：从srcPos开始拷贝的长度
+
+​							注意：要保证两个数组的类型相同（包装类行和对应的基本类型不相同）
+
+​					currentTimeMillis（）：获取（当前-1970.1.1）毫秒数
+
+​					gc（）：垃圾回收机制
+
+## BigInteger/BigDecimal（大数类）
+
+​						先用字符串处理，再转成相应对象
+
+### 							构造方法：
+
+​									示例：BigInteger  bi = new BigInteger("123444562771617617671");
+
+### 							注意：
+
+​									不能直接使用 运算符 进行加减乘除，应当使用方法.
+​									其中数据应当为相同的大数类型
+
+### 							方法（）：
+
+​									加  add（）
+​									减 subtract（）
+​									乘 multiply（）
+​									除 divide（）
+​											注意：对于BigDecimal类型来说，可能会返回一个无限循环小数，抛出异常
+​														**可以在调用方法时指定精度**
+​														示例：
+
+```java
+	 BigDecimal 1.divide(BigDecimal 2，BigDecimal.ROUND_CEILING)//保留与分子(被除数)相同的精度
+```
+
+
+
+### 							适用范围：
+
+​									当整型数据过大时，使用BigInteger
+​									当要求精度够大时（小数点后多位小数），使用BigDecimal
+
+## Date类（第一代日期类）
+
+### 				方法：
+
+​						1.日期格式：
+​						
+
+```Java
+SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd  hh:mm:ss E")
+//y:年  M：月  dd：日  hh：mm：dd ：时分秒  E星期
+String s=sdf.format(Date d);//将日期格式转化为设定的格式
+String s=sdf.parse("……");//将指定格式的日期还原为默认格式
+```
+
+
+
+## Calendar类（第二代日期类）
+
+​			Calendar是一个抽象类，通过静态方法getInstance（）获取对象，用过get（）获取年,月,日
+
+### 				方法：
+
+​						get():获取Calendar类里的静态字段
+
+```java
+c.get(Calendar.Year)
+c.get(Calendar.MONTH+1)//Calendar里面的Month以0开始
+c.get(Calendar.DAY_OF_MONTH)//获取日期
+c.get(Calendar.HOUR)//获取12进制日期
+c.get(Calendar.HOUR_DAY)//获取24进制日期
+```
+
+​			Calendar没有专门的格式化方法，靠程序员自己组合
+
+## LocalDate（日期），LocalTime（时分秒），LocalDateTime（都有）（第三代日期类）
+
+### 			前两代日期类弊病：
+
+​							1.可变性：日期时间应该不可变
+
+​							2.偏移性：Date年份从1900年开始，而月份都从0开始
+
+​							3.格式化：Calendar没有专门格式化
+
+​							4.线程不安全，不能处理闰秒（每两天多一秒）
+
+### 			方法：
+
+​							now（）：获取当前日期时间的对象
+
+​							getYear（）
+
+​							getMonth（）：获取英文的月，如MARCH
+
+​							getMonthValue（）：获取数字月
+
+​							getDayOfMonth（）：
+
+​							……
+
+### 			格式化：
+
+​							
+
+```java
+DateTimeFormatter  dtf = new DateTimeFormatter（格式）;
+String s = dtf.format(str);
+```
+
+
+
+
 
 # 控制流程
 
