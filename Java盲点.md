@@ -1112,3 +1112,88 @@ public @interface SuppressWarnings {
 ​				2.throws 异常类（JVM调用main方法，main方法中调用其他方法）：
 ​					将异常抛出，由调用者处理。最高级处理者为JVM（直接输出异常信息，然后中断程序）
 ​					注意：没有try  catch环绕也没有throws抛出，main默认throws  Exception
+
+# Collection集合
+
+---
+
+​				子接口：
+​							List
+​									实现类：ArrayList，vector，LinkedList
+
+​							Set
+​									实现类：HashTable，HashMap，properties
+
+​				方法：
+​						常见方法：
+​									get（int  index）：
+​									add(Object  o)
+​									emove（int  index/Object  o）:
+​									contains（Object  o）:
+​									size（）:
+​									addAll（Collection  c）:添加一整个c中的元素
+​									removeAll（Collection  c）：如果原来集合中有c集合中的元素，就删除
+​									containsAll（Collection  c）：c集合是否是原集合的子集	
+​						
+​						获取迭代器：
+​									iterator（）：获取迭代器																				
+
+```java
+//迭代器遍历集合
+Iterator iterator=list.itrator();
+//快捷键itit
+//显示所有快捷键：ctrl + j
+while (iterator.hasNext()) {
+   Object next = iterator.next();
+   System.out.println(next);
+}
+//要再次遍历要重新获取迭代器
+```
+
+
+
+​						增强for循环：简化版的迭代器，原理一致
+
+
+
+# List接口
+
+---
+
+​				实现子类：ArrayList，Vector，LinkedList
+
+​				可以通过**向上转型**创建List对象
+
+## 			方法：
+
+​							add（）：
+
+​							add（int  index，Object  obj）：
+
+​							remove（int  index/Object  obj）:
+
+​							set(int  index,Object  objj):
+
+​							sub(int  startIndex,  int  endIndex) : 将集合的一部分 [ startIndex,endIndex）返回
+​								**注意：对返回的集合进行操作同时也影响原来的集合**
+
+# ArrayList
+
+## 			
+
+## 				注意：
+
+​								1.ArrayList可以添加空值（add（null）），并且多个
+​								2.ArrayList是由数组实现数据存储的
+​								3.ArrayList基本等同于Vector，但是ArrayList是线程不安全的（但是效率也相对来说更高），
+​									而Vector是线程安全的
+
+## 				源码分析：
+
+​								1.ArrayList中维护了一个transient  Object[ ]  elementData
+​									transient表示瞬间的，短暂的，。表示该属性不会被序列化
+​								2.使用ArrayList无参构造器时，初始容量应该置为 0。
+​									第一次添加时，容量置为  10.
+​									然后每次容量满后增加为当前容量的1.5倍
+​								3.使用ArrayList（int  size）带参构造器时，初始化容量置为 size。
+​									然后每次容量满后增加为当前容量的1.5倍
