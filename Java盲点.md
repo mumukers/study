@@ -62,6 +62,18 @@
 
 
 
+# 转义符 \
+
+当遇到特殊字符需要转为别的意思时，需要使用 \ 来转义，如 \t
+
+当字符被双斜线包裹时,就要用双斜线 ，如
+
+```java
+"\\."
+```
+
+
+
 # 包
 
 ---
@@ -1130,7 +1142,7 @@ public @interface SuppressWarnings {
 ​									add(Object  o)
 ​									emove（int  index/Object  o）:
 ​									contains（Object  o）:
-​									size（）:
+​									size（）:返回集合中**非空元素**个数
 ​									addAll（Collection  c）:添加一整个c中的元素
 ​									removeAll（Collection  c）：如果原来集合中有c集合中的元素，就删除
 ​									containsAll（Collection  c）：c集合是否是原集合的子集	
@@ -1146,7 +1158,7 @@ Iterator iterator=list.itrator();
 while (iterator.hasNext()) {
    Object next = iterator.next();
    System.out.println(next);
-}
+} 
 //要再次遍历要重新获取迭代器
 ```
 
@@ -1161,6 +1173,8 @@ while (iterator.hasNext()) {
 ---
 
 ​				实现子类：ArrayList，Vector，LinkedList
+
+![image-20220419203852330](C:\Users\木木\AppData\Roaming\Typora\typora-user-images\image-20220419203852330.png)
 
 ​				可以通过**向上转型**创建List对象
 
@@ -1177,7 +1191,7 @@ while (iterator.hasNext()) {
 ​							sub(int  startIndex,  int  endIndex) : 将集合的一部分 [ startIndex,endIndex）返回
 ​								**注意：对返回的集合进行操作同时也影响原来的集合**
 
-# ArrayList
+# ArrayList（线程不安全）
 
 ## 			
 
@@ -1197,3 +1211,180 @@ while (iterator.hasNext()) {
 ​									然后每次容量满后增加为当前容量的1.5倍
 ​								3.使用ArrayList（int  size）带参构造器时，初始化容量置为 size。
 ​									然后每次容量满后增加为当前容量的1.5倍
+
+# Vector（线程安全）
+
+Vector与ArrayList基本相同，但由于Vector支持多线程，建议用Vector。在单线程条件下建议用ArrayList，效率高
+
+## 构造器：
+
+​								Vector（）：默认容量为10，然后每次容量满后增加为当前容量的 2 倍
+
+​								Vector（int  size）：设置初始容量 size，然后每次容量满后增加为当前容量的 2 倍
+​																（默认capacityIncrement值为 0，通过三元运算符添加一个size的容量）
+
+```java
+int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
+                                 capacityIncrement : oldCapacity);
+```
+
+​								Vector（int  size  ，int capacityIncrement）：设置初始容量为  size，然后每次容量满后增加大小为																											capacityIncrement的容量
+
+
+
+# LinkedList（线程不安全）
+
+## 		源代码
+
+​							add（）：添加元素
+
+```java
+ public boolean add(E e) {
+        linkLast(e);
+        return true;
+    }
+
+//在链表末尾添加元素 e
+ void linkLast(E e) {
+     final Node<E> l = last;
+     final Node<E> newNode = new Node<>(l, e, null);//将pre指向last指向的尾结点，next指向null
+     last = newNode;
+     if (l == null)//让first指向第一个结点
+         first = newNode;
+     else
+         l.next = newNode;
+     size++;
+     modCount++;
+ }
+```
+
+​							remove（Object  e）：删除元素
+
+```java
+public boolean remove(Object o) {
+    //寻找内容为o的结点,将其分为两类：null 和 非null
+    if (o == null) {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (x.item == null) {
+                unlink(x);
+                return true;
+            }
+        }
+    } 
+    else {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item)) {
+                unlink(x);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+//将结点 x 从链表中删除
+E unlink(Node<E> x) {
+        // assert x != null;
+        final E element = x.item;
+        final Node<E> next = x.next;
+        final Node<E> prev = x.prev;
+//主要是移除元素时先考虑是否为头，尾结点这两种边界情况
+        if (prev == null) {
+            first = next;//prev为空，说明当前元素为first。当前元素也要移除，让first指向下一个元素
+        } else {
+            prev.next = next;
+            x.prev = null;
+			//这里想了很久，prev只是一个引用，让引用置为null不会对对象本身产生影响，引用只能改变对象中的值
+            //当对象没有任何引用指向时，才会被垃圾回收机制回收，这里有上面局部变量指向
+        }
+
+        if (next == null) {
+            last = prev;//next为空，说明当前元素为last。当前元素也要移除，让last指向上一个元素
+        } else {
+            next.prev = prev;
+            x.next = null;
+        }
+
+ //最终将内容也置为null，彻底清空该结点
+        x.item = null;
+        size--;
+        modCount++;
+        return element;
+    }
+```
+
+
+
+# ArrayList和LinkedList比较
+
+
+
+|            | 底层结构             | 增删效率 | 改查效率 |
+| ---------- | -------------------- | -------- | -------- |
+| ArrayList  | 可变数组（数组扩容） | 较低     | 较高     |
+| LinkedList | 双向列表             | 较高     | 较低     |
+
+在项目中一般使用查询较多，所以使用最多的是ArrayList
+
+当然在不同模块中根据情况使用
+
+
+
+
+
+
+
+# Set接口
+
+---
+
+实现Set接口的实现类对象 以下均称 Set接口对象
+
+实现子类：HashSet，LinkedHashSet，TreeSet
+
+![image-20220419203707512](C:\Users\木木\AppData\Roaming\Typora\typora-user-images\image-20220419203707512.png)
+
+## 注意：
+
+​			1.Set接口对象存和取数据的顺序不一定一致，但位置固定后就不会再改变
+​			2.**Set接口对象是没有索引的**，也就不可能使用 index 获取和操作数据，只能指定元素进行操作
+​			3.**Set接口对象是不允许重复的**，只允许放一个null
+​			4.由于继承 Iterable接口所以可以进行遍历
+
+
+
+# HashSet
+
+**底层是一个HashMap**（而HashMap的底层机制是 数组+链表+红黑树）
+
+## 注意：
+
+​			1.不保证存取顺序一致
+​			2.可以存放null，但是只能存放一个
+
+## 底层机制：
+
+​			HashSet底层是一个HashMap
+
+​			添加一个元素时，会通过得到该元素 hash值，然后转化为索引值
+
+​			找到存储数据表 table，看该索引的位置是否已经有元素
+​				没有，添加该元素到该位置；
+​				有，   先顺着该索引位置上的链表遍历，通过**equals（）方法**
+​	 	**（当有equals（）方法重写时，就按照重写的方法）**看是否有相同的元素，没有就添加到最后，有就不添加
+
+```java
+set.add(new String("hsp"));
+set.add(new String("hsp"));
+//String重写了equals（）方法，所以认定它们为相同元素
+
+set.add(new Dog("lucy"));
+set.add(new Dog("lucy"));
+//Dog类没有重写equals（）方法，所以认定它们为不相同元素
+```
+
+
+
+​			**在JDK 8中，当某一条链表长度 >= 8 时**，
+​				**如果table数组的长度小于 64，就会进行扩容,直至不小于 64**
+​			**然后table转化为红黑树**
