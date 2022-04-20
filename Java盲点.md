@@ -1386,5 +1386,171 @@ set.add(new Dog("lucy"));
 
 
 ​			**在JDK 8中，当某一条链表长度 >= 8 时**，
-​				**如果table数组的长度小于 64，就会进行扩容,直至不小于 64**
-​			**然后table转化为红黑树**
+​				**如果table数组的长度小于 64，就会进行扩容接点数组一次（每次扩容一次变为原来两倍）**
+​			    **如果table数组的长度大于 64然后table转化为红黑树**
+
+
+
+## add方法底层机制
+
+```java
+private static final Object PRESENT = new Object();//就是一个占位的变量
+transient Node<K,V>[] table;//存放节点数组
+
+public boolean add(E e) {
+    return map.put(e, PRESENT)==null;//返回空时就会输出true，否则输出false
+}
+
+public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+
+static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    //key为null时输出零，否则输出一种以hashCode为基础的编码key.hashCode() ^ (h >>> 16)来唯一标记一个key值
+    }
+
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        Node<K,V>[] tab;//将tab指向table所指的数组对象
+   	 	Node<K,V> p; //定义一个结点用来存放表的某个索引上的首结点
+    	int n, i;
+        if ((tab = table) == null || (n = tab.length) == 0)//看该表是否为null，或者长度为0
+            n = (tab = resize()).length;//将表扩容
+        if ((p = tab[i = (n - 1) & hash]) == null)//根据得到的索引值找到位置后，如果没有存放元素（头结点）
+            tab[i] = newNode(hash, key, value, null);//创建一个新的节点存放在在这个位置
+        else {////根据得到的索引值找到位置后，如果已经存放了元素
+            Node<K,V> e; //用来暂存一个结点
+            K k;//用来存放一个结点的key值
+            if (p.hash == hash &&
+                ((k = p.key) == key 
+                 //判断值类型
+                 //(是同一个对象)
+                 //第一个结点的hash值和当前key的hash值相同 并且 key值也相同（避免hash偶然碰撞）
+                 
+                 || (key != null && key.equals(k))))
+                //判断引用类型
+                //上面判断不要求key对象一定不为null，当时此处要调用equals方法
+                //(不是同一个对象但是内容相同)
+               //key不为null（null不能调用equals（）方法） 并且 内容相同（通过动态绑定判断）
+                
+                e = p;//是相同的就将e指向p这个首结点
+            else if (p instanceof TreeNode)//p 后面是否已经被转化为一颗红黑树
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+           		 //调用树的添加方法添加该值
+            else { //如果后面接的是一个链表，就使用for循环遍历
+                for (int binCount = 0; ; ++binCount) {//一个死循环
+                    if ((e = p.next) == null) {//遍历到尾结点;e一直指向p.next
+                        p.next = newNode(hash, key, value, null);
+                        //所有的结点都与它不相同，就将它插入到链表尾部
+                        
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            //TREEIFY_THRESHOLD=8
+                            //当把元素添加到链表末尾后，是否达到8个元素，达到后
+                            //先进行判断，当数组长度没有到达64时，会先进行数组扩容；已经到达时，就树化
+                            treeifyBin(tab, hash);
+                        break; //所有都与它不相同，到达尾部，就break
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;//有相同的，也break
+                    p = e;//让p往下一个结点移动，继续循环
+                }
+            }
+            //说明已经存在该元素，就返回该元素
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        if (++size > threshold)
+            //很重要：这条语句表示不论是增加到一个空的数组位置，还是增加到链表尾部，都会越来越接近临界值
+            //只要是增加了一个就算size+1
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+
+//返回一个“扩容后”新的结点数组，每次扩容为上次的两倍	
+final Node<K,V>[] resize() {
+        Node<K,V>[] oldTab = table;
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        int oldThr = threshold;
+        int newCap, newThr = 0;
+        if (oldCap > 0) {
+            if (oldCap >= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                     oldCap >= DEFAULT_INITIAL_CAPACITY)
+                newThr = oldThr << 1; // double threshold
+        }
+        else if (oldThr > 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {               // zero initial threshold signifies using defaults
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            //static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+            //（加载因子）DEFAULT_LOAD_FACTOR=0.75，所以占大小的75%
+            //设置一个临界值，当超过这个值时就扩容，而不是超过数组大小时才扩容
+        }
+        if (newThr == 0) {
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        threshold = newThr;
+        @SuppressWarnings({"rawtypes","unchecked"})
+        Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+        table = newTab;
+        if (oldTab != null) {
+            for (int j = 0; j < oldCap; ++j) {
+                Node<K,V> e;
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash & (newCap - 1)] = e;
+                    else if (e instanceof TreeNode)
+                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        Node<K,V> loHead = null, loTail = null;
+                        Node<K,V> hiHead = null, hiTail = null;
+                        Node<K,V> next;
+                        do {
+                            next = e.next;
+                            if ((e.hash & oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+```
