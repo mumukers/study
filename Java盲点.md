@@ -1554,3 +1554,34 @@ final Node<K,V>[] resize() {
         return newTab;
     }
 ```
+
+
+
+# Map接口
+
+---
+
+## 注意：
+
+​			1.Map中存放的是具有映射关系的键值对 Key--Value
+​			2.Map中的 Key和Value 可以是任何引用类型的数据，会被封装到HashMap$Node对象中
+​			**3.Map中的Key值不能重复，而Value值可以重复。当出现Key重复时，会将Value替换为新的value**
+​			4.Map中的Key最多只能由一个null，而Value可以有多个null
+​			5.Map中Key不能重复的底层机制相同
+​			6.Map中可以添加Object类的任何子类对象。**当添加基本类型时，会自动装箱为包装类**
+​			7.可以通过Key获取Value值
+
+```java
+public V put(K key, V value) {//这就是Map的put方法底层
+    return putVal(hash(key), key, value, false, true);
+}
+
+//Value替换的底层机制
+if (e != null) { // existing mapping for key，这里的e指向Key值相同的键值对元素
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;//将新的value值赋给e.value 
+                afterNodeAccess(e);
+                return oldValue;
+            }
+```
